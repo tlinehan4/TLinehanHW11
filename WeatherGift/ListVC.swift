@@ -27,7 +27,7 @@ class ListVC: UIViewController {
         tableView.reloadData()
     }
 
-   // MARK: - Segues
+   // MARK: - Segues.
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ToPageVC" {

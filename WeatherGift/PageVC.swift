@@ -15,6 +15,8 @@ class PageVC: UIPageViewController {
     var pageControl: UIPageControl!
     var listButton: UIButton!
     let barButtonWidth: CGFloat = 44
+    var aboutButton: UIButton!
+    var aboutButtonSize: CGSize!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,20 +24,35 @@ class PageVC: UIPageViewController {
         delegate = self
         dataSource = self
         
+        // load any saved location data from UserDefaults
+        if let locationsDefaultsData = UserDefaults.standard.object(forKey: "locationsData") as? Data {
+            if let locationsDefaultsArray = NSKeyedUnarchiver.unarchiveObject(with: locationsDefaultsData) as? [WeatherUserDefault] {
+                locationsArray = locationsDefaultsArray as! [WeatherLocation]
+            } else {
+                print("error creating array")
+            }
+        } else {
+            print("error loading data")
+        }
+        
         var newLocation = WeatherLocation()
         newLocation.name = "Unknown Weather Location"
-        locationsArray.append(newLocation)
+        if locationsArray.count == 0 {
+            locationsArray.append(newLocation)
+        } else {
+            locationsArray[0] = newLocation
+        }
 
         setViewControllers([createDetailVC(forPage: 0)], direction: .forward, animated: false, completion: nil)
         
+        configureButtons()
         configurePageControl()
-        configureListButton()
     }
     
     //MARK: - UI Configuration Methods
     func configurePageControl() {
         let pageControlHeight: CGFloat = barButtonWidth
-        let pageControlWidth: CGFloat = view.frame.width - (barButtonWidth * 2)
+        let pageControlWidth: CGFloat = view.frame.width - (aboutButtonSize.width * 2)
         
         pageControl = UIPageControl(frame: CGRect(x: (view.frame.width - pageControlWidth) / 2, y: view.frame.height - pageControlHeight, width: pageControlWidth, height: pageControlHeight))
         
@@ -45,9 +62,10 @@ class PageVC: UIPageViewController {
         pageControl.currentPage = currentPage
         
         view.addSubview(pageControl)
+
     }
     
-    func configureListButton() {
+    func configureButtons() {
         let barButtonHeight = barButtonWidth
         
         listButton = UIButton(frame: CGRect(x: view.frame.width - barButtonWidth, y: view.frame.height - barButtonHeight, width: barButtonWidth, height: barButtonHeight))
@@ -58,12 +76,31 @@ class PageVC: UIPageViewController {
         
         view.addSubview(listButton)
         
+        let aboutButtonText = "About..."
+        let aboutButtonFont = UIFont.systemFont(ofSize: 15)
+        let fontAttributes = [NSFontAttributeName: aboutButtonFont]
+        aboutButtonSize = aboutButtonText.size(attributes: fontAttributes)
+        
+        aboutButtonSize.height += 16
+        aboutButtonSize.width += 16
+        
+        aboutButton = UIButton(frame: CGRect(x: 8, y: (view.frame.height - 5) - aboutButtonSize.height, width: aboutButtonSize.width, height: aboutButtonSize.height))
+        aboutButton.setTitle(aboutButtonText, for: .normal)
+        aboutButton.setTitleColor(UIColor.darkText, for: .normal)
+        aboutButton.titleLabel?.font = aboutButtonFont
+        aboutButton.addTarget(self, action: #selector(segueToAboutVC), for: .touchUpInside)
+        
+        view.addSubview(aboutButton)
     }
     
     //MARK: - Segues
     
     func segueToListVC(sender: UIButton!) {
         performSegue(withIdentifier: "ToListVC", sender: sender)
+    }
+    
+    func segueToAboutVC(sender: UIButton) {
+        performSegue(withIdentifier: "ToAboutVC", sender: sender)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
